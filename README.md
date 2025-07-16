@@ -12,7 +12,7 @@ The goal of this test is to implement the **Builder design pattern** in TypeScri
 
 ---
 
-## Part 1: Implement the `FormBuilder` (60 mins)
+## Part 1: Implement the `FormBuilder`
 
 Create a `FormBuilder` class that has the following methods and functionality:
 
