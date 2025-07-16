@@ -122,17 +122,26 @@ export class FormBuilder {
               case 'checkbox':
                 return (
                   <div key={field.name}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        name={field.name}
-                        checked={formState[field.name]}
-                        onChange={(e) => handleChange(field.name, e.target.checked)}
-                      />
-                      {field.label}
-                    </label>
+                    <table className="invisible-table">
+                      <tbody>
+                        <tr>
+                          <td>
+                            <input
+                              type="checkbox"
+                              name={field.name}
+                              checked={formState[field.name]}
+                              onChange={(e) => handleChange(field.name, e.target.checked)}
+                            />
+                          </td>
+                          <td>
+                            <label htmlFor={field.name}>{field.label}</label>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 );
+                
             }
           })}
           <button type="submit">Submit</button>
