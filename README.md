@@ -1,88 +1,72 @@
 # React-Test
+# UI Programming Test: The Singleton Pattern
 
-# UI Programming Test: The Dynamic Form Builder
-
-## Rules:
-
-- You are allowed to use AI for this test.
-- The project has been setup with vite and tailwindcss.
-- use any package manager of your choice (npm, pnpm, yarn, etc).
-
-The goal of this test is to implement the **Builder design pattern** in TypeScript/JavaScript to dynamically construct and render a React form component. This test assesses the ability to separate the construction of a complex object from its representation.
+The goal of this test is to implement the **Singleton design pattern** to manage a shared, global state within a React application. This test assesses your ability to correctly implement the pattern and integrate it into React's component-based, reactive environment.
 
 ---
 
-## Part 1: Implement the `FormBuilder`
+## Part 1: Implement the `AuthService` Singleton (60 mins)
 
-Create a `FormBuilder` class that has the following methods and functionality:
+You will create a client-side authentication service that manages the user's session state. This service must be a Singleton to ensure that all parts of the application reference the exact same instance and state.
 
-1.  **`constructor(formId: string)`**
+### **1. `AuthService.ts` / `AuthService.js` Requirements:**
 
-    - Initializes the builder with a unique ID for the `<form>` element.
+Create an `AuthService` class with the following specifications:
 
-2.  **`addTextField(name: string, label: string, defaultValue?: string)`**
+* **Singleton Implementation:**
+    * The class must enforce the Singleton pattern. It should have a private constructor and a static `getInstance()` method that returns the single, shared instance of the class.
 
-    - Adds a configuration for a standard text input field (`<input type="text">`).
-    - It must be chainable (i.e., return `this`).
+* **Internal State:**
+    * The instance should hold the authentication state internally (e.g., as private properties).
+        * `isAuthenticated: boolean`
+        * `userProfile: object | null`
 
-3.  **`addSelectField(name: string, label: string, options: Array<{value: string, label: string}>)`**
+* **Public Methods:**
+    * `login(username, password)`: An `async` method that simulates an API call.
+        * If `username` is `"admin"` and `password` is `"password"`, it should set `isAuthenticated` to `true`, store a mock user profile (e.g., `{ name: 'Admin User', email: 'admin@example.com' }`), and resolve successfully.
+        * For any other credentials, it should reject with an error.
+    * `logout()`: Resets the internal state (`isAuthenticated` to `false`, `userProfile` to `null`).
+    * `getAuthState()`: A synchronous method that immediately returns the current state: `{ isAuthenticated, userProfile }`.
 
-    - Adds a configuration for a dropdown (`<select>`). The `options` array will populate the `<option>` elements.
-    - It must be chainable.
+* **Subscription Model:**
+    * A critical part of integrating a non-reactive pattern into React is providing a way for components to listen for changes. Add a simple observer pattern to your Singleton:
+        * `subscribe(callback)`: A method to register a listener function that will be called whenever the auth state changes.
+        * `unsubscribe(callback)`: A method to remove a listener.
+        * The `login()` and `logout()` methods must trigger the subscribed callbacks after the state has changed.
 
-4.  **`addCheckbox(name: string, label: string, defaultChecked?: boolean)`**
+### **2. React Component Integration:**
 
-    - Adds a configuration for a checkbox (`<input type="checkbox">`).
-    - It must be chainable.
+Create a small React application that uses your `AuthService` Singleton to demonstrate that it works correctly. The app should have two components that interact with the *same* instance.
 
-5.  **`build(): React.ComponentType`**
-    - This is the final method. It consumes all stored configurations and returns a complete, **stateful React functional component**.
-    - The returned component must:
-      - Render a `<form>` element with the `formId` provided in the constructor.
-      - Render all configured fields with their respective labels.
-      - Manage the state of all its input fields internally using React Hooks.
-      - Upon form submission, it must prevent the default browser refresh, gather all current form values into a single object, and `console.log` this object.
+* **`LoginStatus` Component:**
+    * This component should display the user's status.
+    * On mount, it should subscribe to the `AuthService`.
+    * It must display "Welcome, [User's Name]" and a "Logout" button if the user is authenticated. Clicking "Logout" should call `authService.logout()`.
+    * It must display "You are not logged in." if the user is not authenticated.
+    * **Crucially**, it must re-render automatically when the auth state changes (e.g., after a login attempt in another component).
+    * Don't forget to `unsubscribe` when the component unmounts to prevent memory leaks.
 
----
+* **`LoginForm` Component:**
+    * This component should contain a simple form with "Username" and "Password" inputs and a "Login" button.
+    * When the form is submitted, it should call `AuthService.getInstance().login()` with the input values and handle both successful and failed promises (e.g., by showing an alert).
 
-## Part 2: Usage Example (Demonstration)
+**`App.js` Layout:**
 
-Your `FormBuilder` implementation should work correctly with the following usage code. Include this or a similar example in your solution to demonstrate that your builder works.
-
-**`App.js`**
+Your main `App` component should render both `LoginStatus` and `LoginForm`. This setup will prove that two separate components are sharing and reacting to the state held by the single `AuthService` instance.
 
 ```javascript
-import React from "react";
-import FormBuilder from "./FormBuilder"; // Your implementation
-
-// 1. Create a builder instance and configure the form
-const registrationFormBuilder = new FormBuilder("register-form")
-  .addTextField("username", "Username", "john.doe")
-  .addTextField("email", "Email Address")
-  .addSelectField("department", "Department", [
-    { value: "eng", label: "Engineering" },
-    { value: "hr", label: "Human Resources" },
-    { value: "mktg", label: "Marketing" },
-  ])
-  .addCheckbox("terms", "I agree to the terms and conditions");
-
-// 2. Build the React component from the builder
-const RegistrationForm = registrationFormBuilder.build();
-
-// 3. Render the component
+// App.js
 function App() {
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       <header>
-        <h1>User Registration</h1>
-        <p>This form was generated using the Builder pattern.</p>
+        {/* This component will react to changes initiated by LoginForm */}
+        <LoginStatus />
       </header>
+      <hr style={{ margin: '20px 0' }} />
       <main>
-        <RegistrationForm />
+        <LoginForm />
       </main>
     </div>
   );
-}
-
-export default App;
-```
+}```
